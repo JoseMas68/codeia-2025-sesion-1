@@ -1,3 +1,4 @@
+```markdown
 # Arquitectura de VerFlix
 
 ## Descripción General
@@ -89,22 +90,22 @@ verflix-app/
 ## Flujo de Datos
 
 1. **Carga Inicial**
-   ```
-   HomePage → tmdbApi → TMDB API
-   ↓
-   setState (popularMovies, trendingContent, etc.)
-   ↓
-   Renderizado de Hero y MovieSliders
-   ```
+```
+HomePage → tmdbApi → TMDB API
+↓
+setState (popularMovies, trendingContent, etc.)
+↓
+Renderizado de Hero y MovieSliders
+```
 
 2. **Navegación a Detalle**
-   ```
-   Click en MovieCard → navigate(`/${type}/${id}`)
-   ↓
-   MovieDetailPage → tmdbApi.getMovieDetails/getTVShowDetails
-   ↓
-   Renderizado con información completa
-   ```
+```
+Click en MovieCard → navigate(`/${type}/${id}`)
+↓
+MovieDetailPage → tmdbApi.getMovieDetails/getTVShowDetails
+↓
+Renderizado con información completa
+```
 
 ## Servicios y APIs
 
@@ -169,3 +170,5 @@ primary: {
 - Modo oscuro/claro
 - Internacionalización (i18n)
 - Testing unitario e integración
+
+```
