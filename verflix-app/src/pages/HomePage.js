@@ -136,46 +136,6 @@ function HomePage() {
       {/* Hero Slider */}
       <Hero movies={trendingToday} />
 
-      {/* Actor Trending de la Semana */}
-      {selectedActor && (
-        <div className="max-w-7xl mx-auto mt-12 px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-            {/* Actor Card */}
-            <div>
-              <ActorCard actor={selectedActor} movies={actorMovies} />
-            </div>
-
-            {/* Actor Movies */}
-            <div className="md:col-span-2">
-              {actorMovies.length > 0 ? (
-                <div>
-                  <h3 className="text-2xl font-bold text-white mb-4">Sus Películas Destacadas</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {actorMovies.slice(0, 8).map((movie) => (
-                      <div key={movie.id} className="rounded-lg overflow-hidden hover:scale-105 transition-transform cursor-pointer">
-                        <img
-                          src={`${process.env.REACT_APP_IMAGE_BASE_URL}/w300${movie.poster_path}`}
-                          alt={movie.title}
-                          className="w-full h-48 object-cover"
-                        />
-                        <div className="bg-black/50 p-2">
-                          <p className="text-white text-xs font-semibold truncate">{movie.title}</p>
-                          {movie.vote_average && (
-                            <p className="text-yellow-400 text-xs">⭐ {movie.vote_average.toFixed(1)}</p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <p className="text-gray-400">Cargando películas del actor...</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Movie Sections with Sliders */}
       <div className="max-w-7xl mx-auto mt-8 space-y-8">
         <MovieSlider movies={trendingContent} title="Tendencias de la Semana" />
@@ -184,6 +144,55 @@ function HomePage() {
         <MovieSlider movies={popularMovies} title="Películas Populares" />
         <MovieSlider movies={popularTVShows} title="Series Populares" />
       </div>
+
+      {/* Actor Trending de la Semana - Section at the bottom */}
+      {selectedActor && (
+        <div className="mt-16 border-t-2 border-primary/30 pt-12">
+          {/* Section Title */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+            <h2 className="text-4xl font-bold text-white mb-2">🎬 Actor Trending de la Semana</h2>
+            <p className="text-gray-400 text-lg">Descubre el actor más popular esta semana y sus películas destacadas</p>
+          </div>
+
+          {/* Actor Content */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+              {/* Actor Card */}
+              <div>
+                <ActorCard actor={selectedActor} movies={actorMovies} />
+              </div>
+
+              {/* Actor Movies */}
+              <div className="md:col-span-2">
+                {actorMovies.length > 0 ? (
+                  <div>
+                    <h3 className="text-2xl font-bold text-white mb-4">Sus Películas Destacadas</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {actorMovies.slice(0, 8).map((movie) => (
+                        <div key={movie.id} className="rounded-lg overflow-hidden hover:scale-105 transition-transform cursor-pointer">
+                          <img
+                            src={`${process.env.REACT_APP_IMAGE_BASE_URL}/w300${movie.poster_path}`}
+                            alt={movie.title}
+                            className="w-full h-48 object-cover"
+                          />
+                          <div className="bg-black/50 p-2">
+                            <p className="text-white text-xs font-semibold truncate">{movie.title}</p>
+                            {movie.vote_average && (
+                              <p className="text-yellow-400 text-xs">⭐ {movie.vote_average.toFixed(1)}</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-gray-400">Cargando películas del actor...</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
