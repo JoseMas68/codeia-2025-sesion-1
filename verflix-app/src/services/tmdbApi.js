@@ -143,3 +143,54 @@ export const getTopRatedTVShows = async (page = 1) => {
     throw error;
   }
 };
+
+// Función para obtener actores/personas en tendencia
+export const getTrendingPeople = async (timeWindow = 'week') => {
+  try {
+    const response = await fetch(
+      `${API_URL}/trending/person/${timeWindow}?api_key=${API_KEY}&language=es-ES`
+    );
+    if (!response.ok) {
+      throw new Error('Error al obtener actores en tendencia');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+// Función para obtener películas de un actor
+export const getActorMovies = async (personId) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/person/${personId}/movie_credits?api_key=${API_KEY}&language=es-ES`
+    );
+    if (!response.ok) {
+      throw new Error('Error al obtener películas del actor');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+// Función para obtener detalles de un actor
+export const getActorDetails = async (personId) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/person/${personId}?api_key=${API_KEY}&language=es-ES`
+    );
+    if (!response.ok) {
+      throw new Error('Error al obtener detalles del actor');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};

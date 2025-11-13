@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { getPopularMovies, getTrending, getPopularTVShows, getTopRatedMovies, getTopRatedTVShows } from '../services/tmdbApi';
+import { getPopularMovies, getTrending, getPopularTVShows, getTopRatedMovies, getTopRatedTVShows, getTrendingPeople, getActorMovies } from '../services/tmdbApi';
 import Hero from '../components/Hero';
 import MovieSlider from '../components/MovieSlider';
 import MovieGrid from '../components/MovieGrid';
 import SearchFilterBar from '../components/SearchFilterBar';
+import ActorCard from '../components/ActorCard';
 
 function HomePage() {
   const [popularMovies, setPopularMovies] = useState([]);
@@ -12,6 +13,9 @@ function HomePage() {
   const [trendingToday, setTrendingToday] = useState([]);
   const [topRatedMovies, setTopRatedMovies] = useState([]);
   const [topRatedTVShows, setTopRatedTVShows] = useState([]);
+  const [trendingPeople, setTrendingPeople] = useState([]);
+  const [selectedActor, setSelectedActor] = useState(null);
+  const [actorMovies, setActorMovies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
@@ -24,13 +28,14 @@ function HomePage() {
         setLoading(true);
         setError(null);
 
-        const [popularData, tvData, trendingData, trendingTodayData, topMoviesData, topTVData] = await Promise.all([
+        const [popularData, tvData, trendingData, trendingTodayData, topMoviesData, topTVData, trendingPeopleData] = await Promise.all([
           getPopularMovies(),
           getPopularTVShows(),
           getTrending('all', 'week'),
           getTrending('all', 'day'),
           getTopRatedMovies(),
-          getTopRatedTVShows()
+          getTopRatedTVShows(),
+          getTrendingPeople('week')
         ]);
 
         setPopularMovies(popularData.results || []);
@@ -39,6 +44,7 @@ function HomePage() {
         setTrendingToday(trendingTodayData.results || []);
         setTopRatedMovies(topMoviesData.results || []);
         setTopRatedTVShows(topTVData.results || []);
+        setTrendingPeople(trendingPeopleData.results || []);
       } catch (err) {
         console.error('Error al cargar datos:', err);
         setError('Error al cargar el contenido. Por favor, verifica tu API Key.');
@@ -49,6 +55,29 @@ function HomePage() {
 
     fetchData();
   }, []);
+
+  // Effect para seleccionar actor aleatorio basado en la semana del año
+  useEffect(() => {
+    if (trendingPeople.length > 0) {
+      // Obtener la semana del año actual (determinista)
+      const now = new Date();
+      const start = new Date(now.getFullYear(), 0, 1);
+      const diff = now - start;
+      const oneDay = 86400000; // ms en un día
+      const weekNumber = Math.floor(diff / oneDay / 7);
+
+      // Seleccionar actor basado en la semana (siempre el mismo para la misma semana)
+      const actorIndex = weekNumber % trendingPeople.length;
+      const actor = trendingPeople[actorIndex];
+      setSelectedActor(actor);
+
+      // Obtener películas del actor
+      getActorMovies(actor.id).then((data) => {
+        const movies = data.cast ? data.cast.filter(m => m.poster_path) : [];
+        setActorMovies(movies);
+      }).catch(err => console.error('Error al obtener películas del actor:', err));
+    }
+  }, [trendingPeople]);
 
   if (loading) {
     return (
@@ -106,6 +135,46 @@ function HomePage() {
 
       {/* Hero Slider */}
       <Hero movies={trendingToday} />
+
+      {/* Actor Trending de la Semana */}
+      {selectedActor && (
+        <div className="max-w-7xl mx-auto mt-12 px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+            {/* Actor Card */}
+            <div>
+              <ActorCard actor={selectedActor} movies={actorMovies} />
+            </div>
+
+            {/* Actor Movies */}
+            <div className="md:col-span-2">
+              {actorMovies.length > 0 ? (
+                <div>
+                  <h3 className="text-2xl font-bold text-white mb-4">Sus Películas Destacadas</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {actorMovies.slice(0, 8).map((movie) => (
+                      <div key={movie.id} className="rounded-lg overflow-hidden hover:scale-105 transition-transform cursor-pointer">
+                        <img
+                          src={`${process.env.REACT_APP_IMAGE_BASE_URL}/w300${movie.poster_path}`}
+                          alt={movie.title}
+                          className="w-full h-48 object-cover"
+                        />
+                        <div className="bg-black/50 p-2">
+                          <p className="text-white text-xs font-semibold truncate">{movie.title}</p>
+                          {movie.vote_average && (
+                            <p className="text-yellow-400 text-xs">⭐ {movie.vote_average.toFixed(1)}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-gray-400">Cargando películas del actor...</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Movie Sections with Sliders */}
       <div className="max-w-7xl mx-auto mt-8 space-y-8">
