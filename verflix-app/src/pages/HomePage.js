@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getPopularMovies, getTrending, getPopularTVShows, getTopRatedMovies, getTopRatedTVShows, getActorMovies, getMovieCredits, getTVCredits } from '../services/tmdbApi';
+import { getPopularMovies, getTrending, getPopularTVShows, getTopRatedMovies, getTopRatedTVShows, getActorMovies, getMovieCredits, getTVCredits, getImageUrl } from '../services/tmdbApi';
 import Hero from '../components/Hero';
 import MovieSlider from '../components/MovieSlider';
 import MovieGrid from '../components/MovieGrid';
@@ -203,12 +203,12 @@ function HomePage() {
                       {actorMovies.slice(0, 8).map((movie) => (
                         <div key={movie.id} className="rounded-lg overflow-hidden hover:scale-105 transition-transform cursor-pointer">
                           <img
-                            src={`${process.env.REACT_APP_IMAGE_BASE_URL}/w300${movie.poster_path}`}
-                            alt={movie.title}
+                            src={movie.poster_path ? getImageUrl(movie.poster_path, 'w300') : ''}
+                            alt={movie.title || movie.name}
                             className="w-full h-48 object-cover"
                           />
                           <div className="bg-black/50 p-2">
-                            <p className="text-white text-xs font-semibold truncate">{movie.title}</p>
+                            <p className="text-white text-xs font-semibold truncate">{movie.title || movie.name}</p>
                             {movie.vote_average && (
                               <p className="text-yellow-400 text-xs">⭐ {movie.vote_average.toFixed(1)}</p>
                             )}

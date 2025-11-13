@@ -26,8 +26,8 @@ const ActorCard = ({ actor, movies }) => {
       <p className="text-gray-400 text-xs mb-4">Popularidad: {popularity.toFixed(1)}</p>
 
       {/* Movies Count */}
-      <div className="bg-primary/20 rounded-md p-3">
-        <p className="text-primary font-semibold">
+      <div className="bg-primary text-white rounded-md p-3 shadow-md inline-block">
+        <p className="font-semibold text-sm">
           {movies && movies.length > 0 ? `${movies.length} películas` : 'Cargando películas...'}
         </p>
       </div>
