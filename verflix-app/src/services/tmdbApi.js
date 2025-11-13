@@ -194,3 +194,37 @@ export const getActorDetails = async (personId) => {
     throw error;
   }
 };
+
+// Función para obtener créditos de una película
+export const getMovieCredits = async (movieId) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/movie/${movieId}/credits?api_key=${API_KEY}&language=es-ES`
+    );
+    if (!response.ok) {
+      throw new Error('Error al obtener créditos de la película');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+// Función para obtener créditos de una serie
+export const getTVCredits = async (tvId) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/tv/${tvId}/credits?api_key=${API_KEY}&language=es-ES`
+    );
+    if (!response.ok) {
+      throw new Error('Error al obtener créditos de la serie');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};

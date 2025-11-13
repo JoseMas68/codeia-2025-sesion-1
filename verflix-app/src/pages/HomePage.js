@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getPopularMovies, getTrending, getPopularTVShows, getTopRatedMovies, getTopRatedTVShows, getTrendingPeople, getActorMovies } from '../services/tmdbApi';
+import { getPopularMovies, getTrending, getPopularTVShows, getTopRatedMovies, getTopRatedTVShows, getActorMovies, getMovieCredits, getTVCredits } from '../services/tmdbApi';
 import Hero from '../components/Hero';
 import MovieSlider from '../components/MovieSlider';
 import MovieGrid from '../components/MovieGrid';
@@ -13,7 +13,6 @@ function HomePage() {
   const [trendingToday, setTrendingToday] = useState([]);
   const [topRatedMovies, setTopRatedMovies] = useState([]);
   const [topRatedTVShows, setTopRatedTVShows] = useState([]);
-  const [trendingPeople, setTrendingPeople] = useState([]);
   const [selectedActor, setSelectedActor] = useState(null);
   const [actorMovies, setActorMovies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,17 +33,15 @@ function HomePage() {
           getTrending('all', 'week'),
           getTrending('all', 'day'),
           getTopRatedMovies(),
-          getTopRatedTVShows(),
-          getTrendingPeople('week')
+            getTopRatedTVShows()
         ]);
 
         setPopularMovies(popularData.results || []);
         setPopularTVShows(tvData.results || []);
         setTrendingContent(trendingData.results || []);
         setTrendingToday(trendingTodayData.results || []);
-        setTopRatedMovies(topMoviesData.results || []);
-        setTopRatedTVShows(topTVData.results || []);
-        setTrendingPeople(trendingPeopleData.results || []);
+  setTopRatedMovies(topMoviesData.results || []);
+  setTopRatedTVShows(topTVData.results || []);
       } catch (err) {
         console.error('Error al cargar datos:', err);
         setError('Error al cargar el contenido. Por favor, verifica tu API Key.');
@@ -56,28 +53,63 @@ function HomePage() {
     fetchData();
   }, []);
 
-  // Effect para seleccionar actor aleatorio basado en la semana del año
+  // Effect para seleccionar un actor basado en una película existente (determinista por semana)
   useEffect(() => {
-    if (trendingPeople.length > 0) {
-      // Obtener la semana del año actual (determinista)
+    const pickActorFromExistingMovies = async () => {
+      // Combinar fuentes de películas/series que ya cargamos
+      const combined = [
+        ...(trendingContent || []),
+        ...(trendingToday || []),
+        ...(topRatedMovies || []),
+        ...(topRatedTVShows || []),
+        ...(popularMovies || []),
+        ...(popularTVShows || []),
+      ].filter(Boolean);
+
+      if (combined.length === 0) return;
+
+      // Semana del año determínistica
       const now = new Date();
       const start = new Date(now.getFullYear(), 0, 1);
       const diff = now - start;
-      const oneDay = 86400000; // ms en un día
+      const oneDay = 86400000;
       const weekNumber = Math.floor(diff / oneDay / 7);
 
-      // Seleccionar actor basado en la semana (siempre el mismo para la misma semana)
-      const actorIndex = weekNumber % trendingPeople.length;
-      const actor = trendingPeople[actorIndex];
-      setSelectedActor(actor);
+      // Elegir un índice basado en la semana
+      const itemIndex = weekNumber % combined.length;
+      const item = combined[itemIndex];
 
-      // Obtener películas del actor
-      getActorMovies(actor.id).then((data) => {
+      try {
+        // Obtener créditos del item según su tipo
+        const type = item.media_type || (item.title ? 'movie' : 'tv');
+        let credits = null;
+        if (type === 'movie') {
+          credits = await getMovieCredits(item.id);
+        } else {
+          credits = await getTVCredits(item.id);
+        }
+
+        const cast = credits && credits.cast ? credits.cast : [];
+        if (cast.length === 0) return;
+
+        // Elegir actor del cast que tenga foto y sea actor
+        const candidates = cast.filter(c => c.profile_path && (c.known_for_department || '').toLowerCase() === 'acting');
+        const chosen = (candidates.length > 0 ? candidates : cast)[weekNumber % (candidates.length > 0 ? candidates.length : cast.length)];
+        if (!chosen) return;
+
+        setSelectedActor(chosen);
+
+        // Obtener películas del actor
+        const data = await getActorMovies(chosen.id);
         const movies = data.cast ? data.cast.filter(m => m.poster_path) : [];
         setActorMovies(movies);
-      }).catch(err => console.error('Error al obtener películas del actor:', err));
-    }
-  }, [trendingPeople]);
+      } catch (err) {
+        console.error('Error al seleccionar actor desde películas existentes:', err);
+      }
+    };
+
+    pickActorFromExistingMovies();
+  }, [trendingContent, trendingToday, topRatedMovies, topRatedTVShows, popularMovies, popularTVShows]);
 
   if (loading) {
     return (
