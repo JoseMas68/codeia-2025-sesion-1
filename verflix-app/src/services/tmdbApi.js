@@ -109,3 +109,37 @@ export const getTrending = async (mediaType = 'all', timeWindow = 'day') => {
     throw error;
   }
 };
+
+// Función para obtener películas mejor valoradas (Top Rated)
+export const getTopRatedMovies = async (page = 1) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/movie/top_rated?api_key=${API_KEY}&language=es-ES&page=${page}`
+    );
+    if (!response.ok) {
+      throw new Error('Error al obtener películas mejor valoradas');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};
+
+// Función para obtener series mejor valoradas (Top Rated)
+export const getTopRatedTVShows = async (page = 1) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/tv/top_rated?api_key=${API_KEY}&language=es-ES&page=${page}`
+    );
+    if (!response.ok) {
+      throw new Error('Error al obtener series mejor valoradas');
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error);
+    throw error;
+  }
+};

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getPopularMovies, getTrending, getPopularTVShows } from '../services/tmdbApi';
+import { getPopularMovies, getTrending, getPopularTVShows, getTopRatedMovies, getTopRatedTVShows } from '../services/tmdbApi';
 import Hero from '../components/Hero';
 import MovieSlider from '../components/MovieSlider';
 import MovieGrid from '../components/MovieGrid';
@@ -10,10 +10,13 @@ function HomePage() {
   const [popularTVShows, setPopularTVShows] = useState([]);
   const [trendingContent, setTrendingContent] = useState([]);
   const [trendingToday, setTrendingToday] = useState([]);
+  const [topRatedMovies, setTopRatedMovies] = useState([]);
+  const [topRatedTVShows, setTopRatedTVShows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
+  const [minRating, setMinRating] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -21,17 +24,21 @@ function HomePage() {
         setLoading(true);
         setError(null);
 
-        const [popularData, tvData, trendingData, trendingTodayData] = await Promise.all([
+        const [popularData, tvData, trendingData, trendingTodayData, topMoviesData, topTVData] = await Promise.all([
           getPopularMovies(),
           getPopularTVShows(),
           getTrending('all', 'week'),
-          getTrending('all', 'day')
+          getTrending('all', 'day'),
+          getTopRatedMovies(),
+          getTopRatedTVShows()
         ]);
 
         setPopularMovies(popularData.results || []);
         setPopularTVShows(tvData.results || []);
         setTrendingContent(trendingData.results || []);
         setTrendingToday(trendingTodayData.results || []);
+        setTopRatedMovies(topMoviesData.results || []);
+        setTopRatedTVShows(topTVData.results || []);
       } catch (err) {
         console.error('Error al cargar datos:', err);
         setError('Error al cargar el contenido. Por favor, verifica tu API Key.');
@@ -73,6 +80,8 @@ function HomePage() {
         onSearchChange={setSearch}
         category={category}
         onCategoryChange={setCategory}
+        minRating={minRating}
+        onMinRatingChange={setMinRating}
       />
 
       {/* If searching or filtering, show a grid of filtered results */}
@@ -82,10 +91,13 @@ function HomePage() {
             movies={getFilteredMovies({
               search,
               category,
+              minRating,
               popularMovies,
               popularTVShows,
               trendingContent,
               trendingToday,
+              topRatedMovies,
+              topRatedTVShows,
             })}
             title="Resultados"
           />
@@ -98,6 +110,8 @@ function HomePage() {
       {/* Movie Sections with Sliders */}
       <div className="max-w-7xl mx-auto mt-8 space-y-8">
         <MovieSlider movies={trendingContent} title="Tendencias de la Semana" />
+        <MovieSlider movies={topRatedMovies} title="Películas Mejor Valoradas" />
+        <MovieSlider movies={topRatedTVShows} title="Series Mejor Valoradas" />
         <MovieSlider movies={popularMovies} title="Películas Populares" />
         <MovieSlider movies={popularTVShows} title="Series Populares" />
       </div>
@@ -106,21 +120,21 @@ function HomePage() {
 }
 
 // Helper to combine and filter movies based on search and category
-function getFilteredMovies({ search, category, popularMovies, popularTVShows, trendingContent, trendingToday }) {
+function getFilteredMovies({ search, category, minRating, popularMovies, popularTVShows, trendingContent, trendingToday, topRatedMovies, topRatedTVShows }) {
   const q = (search || '').toLowerCase().trim();
 
   let source = [];
   if (category === 'Trending') {
     source = [...trendingToday, ...trendingContent];
   } else if (category === 'Movies') {
-    source = [...popularMovies];
+    source = [...popularMovies, ...topRatedMovies];
   } else if (category === 'TV') {
-    source = [...popularTVShows];
+    source = [...popularTVShows, ...topRatedTVShows];
   } else {
-    source = [...popularMovies, ...popularTVShows, ...trendingContent, ...trendingToday];
+    source = [...popularMovies, ...popularTVShows, ...trendingContent, ...trendingToday, ...topRatedMovies, ...topRatedTVShows];
   }
 
-  // Normalize and dedupe by id+type
+  // Normalize and dedupe by id+type, then filter by rating and search
   const seen = new Set();
   const normalized = [];
 
@@ -131,8 +145,13 @@ function getFilteredMovies({ search, category, popularMovies, popularTVShows, tr
     seen.add(key);
 
     const title = (item.title || item.name || '').toString();
+    const rating = item.vote_average || 0;
+
+    // Aplicar filtros
     if (!q || title.toLowerCase().includes(q)) {
-      normalized.push(item);
+      if (rating >= minRating) {
+        normalized.push(item);
+      }
     }
   }
 
